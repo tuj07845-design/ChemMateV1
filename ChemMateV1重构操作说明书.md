@@ -16,6 +16,7 @@
 - 第 7 节　Python 语法速查（代码小白专用，看不懂代码时回来查）
 - 第 8 节　全流程验证清单（做完打勾）
 - 第 9 节　Git 常用命令速查（新手版）
+- 配套手册：《Git使用说明手册.md》（Git 完整教程）、《记忆模块构建指南.md》（三层记忆搭建）
 
 ---
 
@@ -188,9 +189,12 @@ ChemMateV1工作台/                          ← 项目根目录
     │   ├── llm_client.py                 ← 大模型客户端（原 OpenAICompatibleClient 类）
     │   ├── action_parser.py              ← Action 文本协议解析（原 4 个解析函数）
     │   └── system_prompt.py              ← 系统提示词（原 AGENT_SYSTEM_PROMPT）
-    ├── memory/                           ← 【记忆层】
+    ├── memory/                           ← 【记忆层】（详见《记忆模块构建指南.md》）
     │   ├── __init__.py
-    │   └── process_cache.py              ← "最近一次取数结果"缓存（原 draw_mat 里的缓存）
+    │   ├── process_cache.py              ← 第一层：进程内短时缓存（原 draw_mat 里的缓存）
+    │   ├── session_store.py              ← 第二层：会话记忆（JSONL 文件，任务过程落盘）
+    │   ├── knowledge_base.py             ← 第三层：长期知识库（Markdown 知识卡 + 关键词检索）
+    │   └── knowledge/                    ← 知识卡目录（一张卡一个 .md 文件）
     ├── ui/                               ← Web 演示界面（保持不动）
     ├── matlab/                           ← MATLAB 绘图脚本（保持不动）
     └── reports/                          ← 生成的报告（保持不动）
@@ -483,6 +487,8 @@ from memory.process_cache import remember_process_data, get_cached_process_data
 ~~~
 
 （可选）`memory/session_log.py`：把每次工具调用的参数、结果摘要、耗时写成 JSONL 日志，方便排查问题。这是第二期工程化内容，现在不做也行。
+
+> 📘 **记忆模块完整搭建教程**（三层：进程缓存 → 会话记忆 → 长期知识库，含全部可照抄代码和接入主程序的方法）见根目录《记忆模块构建指南.md》。
 
 ### 5.5 新主程序 agent_main.py（完整代码）
 
