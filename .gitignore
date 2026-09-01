@@ -1,0 +1,32 @@
+# ============================================================
+# ChemMate V1 .gitignore
+# 规则：真正生成的垃圾不进版本库；代码和产物全部保留
+# ============================================================
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# IDE 配置（PyCharm / VSCode）
+.idea/
+.vscode/
+
+# 密钥（绝不提交！）
+.env
+.env.local
+*.pem
+
+# 临时文件
+*.tmp
+.tmp_*
+~$*
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+
+# 运行日志（如果有）
+*.log

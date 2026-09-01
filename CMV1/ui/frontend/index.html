@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChemMate V1 · Agent Console</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- ============ 顶栏 ============ -->
+  <header id="topbar">
+    <div class="brand">
+      <div class="logo">CM</div>
+      <div class="brand-text">
+        <div class="brand-name">ChemMate&nbsp;V1</div>
+        <div class="brand-sub">AI Chemical Engineering Assistant</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="env-tag">MOCK&nbsp;MODE</span>
+      <span id="sys-badge" class="badge st-waiting"><i class="dot"></i><span id="sys-badge-text">Ready</span></span>
+    </div>
+  </header>
+
+  <!-- ============ 主体三栏 ============ -->
+  <main id="main">
+
+    <!-- 左：用户任务 -->
+    <section id="task-panel" class="panel">
+      <div class="panel-title">用户任务<span class="panel-en">TASK</span></div>
+      <div class="task-body">
+        <textarea id="task-input" spellcheck="false"
+          placeholder="请输入你的化工任务……&#10;例如：分析10万吨环己烷模型的S10物流，绘制物流组成图并生成报告。"></textarea>
+        <div class="quick-tasks" id="quick-tasks"></div>
+        <div class="btn-row">
+          <button id="btn-start" class="btn primary">开始执行</button>
+          <button id="btn-stop" class="btn danger" disabled>停止</button>
+          <button id="btn-clear" class="btn ghost">清空</button>
+        </div>
+        <div class="task-meta" id="task-meta">等待输入任务</div>
+      </div>
+    </section>
+
+    <!-- 中：Agent Workflow -->
+    <section id="workflow-panel" class="panel">
+      <div class="panel-title">Agent&nbsp;Workflow<span class="panel-en">PIPELINE</span></div>
+      <div id="workflow" class="workflow"></div>
+    </section>
+
+    <!-- 右：Tool Console -->
+    <section id="console-panel" class="panel">
+      <div class="panel-title">Tool&nbsp;Console<span class="panel-en">STDOUT</span></div>
+      <div id="console" class="console">
+        <div class="log-line"><span class="log-ts">--:--:--</span> <span class="dim">等待任务……</span></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 底部：Result ============ -->
+  <section id="result-panel" class="panel">
+    <div class="panel-title">Result<span class="panel-sub">数据 / 图片 / 分析</span></div>
+
+    <div id="result-empty" class="result-empty">
+      <div class="empty-glyph">◎</div>
+      <div>尚无结果 —— 任务完成后在此展示股流数据、MATLAB 图表与报告</div>
+    </div>
+
+    <div id="result-body" class="result-body hidden">
+      <!-- 左：数据 -->
+      <div class="result-data">
+        <div class="stream-head">
+          <span class="stream-tag">STREAM</span>
+          <span class="stream-name" id="stream-name">S10</span>
+          <span class="prop-chips" id="prop-chips"></span>
+        </div>
+        <div class="tables-wrap" id="tables-wrap"></div>
+      </div>
+      <!-- 右：图 + 报告 -->
+      <div class="result-side">
+        <div class="card">
+          <div class="card-title">MATLAB&nbsp;Analysis</div>
+          <div class="fig-box"><img id="figure-img" alt="figure"></div>
+          <div class="card-actions">
+            <button id="btn-open-img" class="btn small ghost">打开图片</button>
+            <button id="btn-redraw" class="btn small ghost">重新绘图</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Report</div>
+          <div class="report-status" id="report-status">word_create 尚未生成报告</div>
+          <div class="card-actions">
+            <button id="btn-word" class="btn small primary">生成 Word</button>
+            <button id="btn-ppt" class="btn small ghost">生成 PPT</button>
+            <button id="btn-open-report" class="btn small ghost">打开报告</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
