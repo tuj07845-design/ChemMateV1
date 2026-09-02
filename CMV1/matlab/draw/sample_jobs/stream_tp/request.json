@@ -1,7 +1,0 @@
-{
-  "plot_type": "stream_tp",
-  "title": "Key streams T / P",
-  "export": "png",
-  "ylabel_left": "Temperature / C",
-  "ylabel_right": "Pressure / bar"
-}
