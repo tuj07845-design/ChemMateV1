@@ -16,9 +16,9 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Callable
 
-from jobs import create_job_dir, read_result, write_job
-from matlab_backend import MatlabFailed, run_draw_dispatch
-from tables import DrawError, PLOT_TYPES, split_for_plot
+from .jobs import create_job_dir, read_result, write_job
+from .matlab_backend import MatlabFailed, run_draw_dispatch
+from .tables import DrawError, PLOT_TYPES, split_for_plot
 
 TOOL_NAME = "draw_mat"
 
@@ -153,7 +153,7 @@ def _resolve_process_data(process_data: dict | None) -> dict:
     if cached is None:
         raise DrawError(
             "missing_process_data",
-            "没有流程数据。请先调用 data_get_process（不要把 JSON 传给 draw_mat）。",
+            "没有流程数据。请先调用 data_get_process（不要把 JSON 传给 draw_mat）。"
         )
     return cached
 

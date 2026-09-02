@@ -117,7 +117,7 @@ def _try_engine(job_dir: Path, draw_path: Path) -> bool:
 def _discover_matlab_bin() -> str:
     """定位 matlab 可执行文件：环境变量 > PATH > 常见安装位置。
 
-    非标准安装（如 E:\AM1）没有注册到系统，Engine 找不到，
+    非标准安装（如 E:\\AM1）没有注册到系统，Engine 找不到，
     但可执行文件本身能直接跑 -batch，这里做自动探测。
     """
     env = os.environ.get("CHEMMATE_MATLAB_BIN")

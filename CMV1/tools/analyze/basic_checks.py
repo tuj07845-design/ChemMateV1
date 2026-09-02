@@ -440,14 +440,17 @@ def check_process(process_data):
                 and block_name
                 not in detail_names
             ):
-
                 findings.append({
                     "level": "warning",
-                    "type": "missing_block_detail",
+                    "type": "missing_output_stream",
                     "block": block_name,
+                    "stream": str(
+                        stream_name
+                    ),
                     "message": (
-                        f"{block_name} "
-                        "没有对应的 block_details"
+                        f"{block_name} 的输出 "
+                        f"{stream_name} "
+                        "未在 streams 中找到"
                     ),
                 })
 
@@ -518,7 +521,7 @@ def check_process(process_data):
 
                     findings.append({
                         "level": "warning",
-                        "type": "missing_output_stream"
+                        "type": "missing_output_stream",
                         "block": block_name,
                         "stream": str(
                             stream_name

@@ -1,4 +1,10 @@
 
+from __future__ import annotations
+
+import os
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 
 
@@ -63,12 +69,6 @@ SECTION_TYPES = ("heading", "paragraph", "bullets", "table", "image")
 
 
 
-from __future__ import annotations
-
-import os
-from datetime import datetime
-from pathlib import Path
-from typing import Any
 
 # ============================================================
 # 便捷：从 analyze 结果 + 图片快速组装 sections
