@@ -1,0 +1,10 @@
+SLAVE:
+INPUT: _3804edt.inm
+MODNAME: apmain
+RUNID: _3804edt
+NEW_RUNID: _3804edt
+OLD_RUNID: _3804edt
+PDF: _3804edt.appdf
+USERNAME: Fool
+XMOD: E:\Fool\aspen15\Aspen Plus V15.0\Engine\xeq\apmain
+SPONLY:
