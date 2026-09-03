@@ -30,3 +30,17 @@ Desktop.ini
 
 # 运行日志（如果有）
 *.log
+# Aspen / 崩溃转储与运行时临时产物
+*.dmp
+*.def
+commonshellsettings.xml
+
+# 静态分析临时脚本（勿入库）
+py_import_check*.py
+py_accept*.py
+py_scan_*.py
+py_check_*.py
+py_tmp_*.py
+py_test_*.py
+py_*.py
+
