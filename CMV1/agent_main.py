@@ -11,6 +11,9 @@ from tools.analyze import analyze_process
 from tools.draw_mat import draw_mat
 from tools.report_create import report_create, build_sections_from_results
 from tools.bash_tool import bash
+from tools.draw_mat.draw_mat import remember_process_data
+from memory.process_cache import remember_process_data,get_cached_process_data,get_history,clear
+from memory.session_store import new_session,_log_path,record,load_session,last_answers
 
 # ---- Agent 层 ----
 from agents.llm_client import OpenAICompatibleClient
@@ -188,4 +191,13 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
 
 
 if __name__ == "__main__":
-    run_agent(DEFAULT_PROMPT)
+    print("ChemMate V1 Agent 已启动。")
+    print("输入任务后回车执行；直接回车重输；输入 q 退出。")
+    while True:
+        task = input("任务 > ").strip()
+        if not task:
+            continue
+        if task.lower() in ("q", "quit", "exit"):
+            print("再见！")
+            break
+        run_agent(task)

@@ -121,9 +121,9 @@ def _default_draw_path() -> Path:
     # ds: 重组后 draw_mat.py 位于 CMV1/，matlab/draw 就在同级的
     # ds: CMV1/matlab/draw，即 parents[0]；旧版只试 parents[1]/[2] 导致找不到
     for cand in (
-        here.parents[0] / "matlab" / "draw",
-        here.parents[1] / "matlab" / "draw",
-        here.parents[2] / "matlab" / "draw",
+        here.parents[0] / "draw_mat" / "matlab",
+        here.parents[1] / "draw_mat" / "matlab",
+        here.parents[2] / "tools" / "draw_mat",
     ):
         if (cand / "draw_dispatch.m").is_file():
             return cand

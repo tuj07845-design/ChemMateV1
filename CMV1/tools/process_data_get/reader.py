@@ -1,6 +1,9 @@
 import os
 import json
 import win32com.client as win32
+from .small_tool import read_value, read_component_data, read_simulation_status
+from .block_type import get_block_type_data,get_block_real_type,collect_block_parameters,pick_key_parameters
+
 
 # ============================================================
 # 六、主流程：完整读取 Aspen 流程信息（增强版）

@@ -1,0 +1,8 @@
+{
+  "plot_type": "stream_tp",
+  "title": "全流程流股温度-压力分布",
+  "export": "png",
+  "ylabel": "",
+  "ylabel_left": "Temperature / C",
+  "ylabel_right": "Pressure / bar"
+}

@@ -1,6 +1,7 @@
 import os
 import json
 import win32com.client as win32
+from .knowledge_base import TYPE_KNOWLEDGE,DEFAULT_CATEGORY
 
 def get_block_real_type(flowsheet_input, block_name):
     """
