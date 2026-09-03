@@ -19,7 +19,7 @@ class OpenAICompatibleClient:
                     response = self.client.chat.completions.create(
                         model=self.model,
                         messages=messages,
-                        stream=False
+                        stream=False,
                     )
                     answer = response.choices[0].message.content
                     print("大语言模型响应成功。")

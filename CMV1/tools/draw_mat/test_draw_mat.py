@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import draw_mat as dm  # noqa: E402
-from tables import DrawError, split_for_plot  # noqa: E402
+from .tables import DrawError, split_for_plot  # noqa: E402
 
 
 def vu(v, u=""):

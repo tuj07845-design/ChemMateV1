@@ -10,8 +10,8 @@ ChemMate V1 — 流程数据 / 绘图入口的进程级包装
   这样 Agent 框架注册工具时，数据在 Python 进程内流动，
   不需要把大 JSON 反复传进传出。
 """
-from draw_mat import get_cached_process_data, remember_process_data, wrap_data_get
-from draw_mat import draw_mat as _draw_mat
+from .draw_mat import get_cached_process_data, remember_process_data, wrap_data_get
+from .draw_mat import draw_mat as _draw_mat
 
 
 def wrap_draw_mat(fn=None):
