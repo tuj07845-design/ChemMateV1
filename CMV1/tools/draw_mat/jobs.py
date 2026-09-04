@@ -13,16 +13,32 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import uuid
 from pathlib import Path
 from typing import Any
 
 
-def create_job_dir(jobs_root: str | Path) -> Path:
-    """在 jobs_root 下创建一个唯一 job 目录（draw_ 前缀 + 8 位随机 hex）。"""
+def _sanitize_name(name: str, max_len: int = 24) -> str:
+    """把任务名变成安全的目录名片段：去 Windows 非法字符与空白，限长。"""
+    s = re.sub(r'[\\/:*?"<>|\s]+', "_", str(name).strip())
+    s = s.strip("_. ")
+    if len(s) > max_len:
+        s = s[:max_len]
+    return s or "task"
+
+
+def create_job_dir(jobs_root: str | Path, name: str | None = None) -> Path:
+    """在 jobs_root 下创建一个唯一 job 目录。
+
+    name=None 时目录名为 draw_xxxxxxxx（原行为，向后兼容）；
+    传入 name（如模型文件名 10万吨环己烷.bkp 的干名）时，
+    目录名为 <清洗后名字>_xxxxxxxx，方便一眼看出这个 job 属于哪个任务。
+    """
     root = Path(jobs_root)
     root.mkdir(parents=True, exist_ok=True)
-    job = root / f"draw_{uuid.uuid4().hex[:8]}"
+    tag = _sanitize_name(name) if name else "draw"
+    job = root / f"{tag}_{uuid.uuid4().hex[:8]}"
     job.mkdir(parents=True, exist_ok=True)
     return job
 

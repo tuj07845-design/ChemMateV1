@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChemMate V1 · Agent Console</title>
+  <title>ChemMate V1 · AI 化工助手</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -18,7 +18,7 @@
       </div>
     </div>
     <div class="top-right">
-      <span class="env-tag">MOCK&nbsp;MODE</span>
+      <span class="env-tag">ASPEN&nbsp;PLUS&nbsp;·&nbsp;MATLAB&nbsp;·&nbsp;LIVE</span>
       <span id="sys-badge" class="badge st-waiting"><i class="dot"></i><span id="sys-badge-text">Ready</span></span>
     </div>
   </header>
@@ -31,7 +31,7 @@
       <div class="panel-title">用户任务<span class="panel-en">TASK</span></div>
       <div class="task-body">
         <textarea id="task-input" spellcheck="false"
-          placeholder="请输入你的化工任务……&#10;例如：分析10万吨环己烷模型的S10物流，绘制物流组成图并生成报告。"></textarea>
+          placeholder="请输入你的化工任务……&#10;例如：检查10万吨环己烷.bkp全流程有无报错，如有则生成带图的Word报告。"></textarea>
         <div class="quick-tasks" id="quick-tasks"></div>
         <div class="btn-row">
           <button id="btn-start" class="btn primary">开始执行</button>
@@ -42,15 +42,17 @@
       </div>
     </section>
 
-    <!-- 中：Agent Workflow -->
+    <!-- 中：Agent Workflow（动态步骤） -->
     <section id="workflow-panel" class="panel">
-      <div class="panel-title">Agent&nbsp;Workflow<span class="panel-en">PIPELINE</span></div>
-      <div id="workflow" class="workflow"></div>
+      <div class="panel-title">Agent&nbsp;Workflow<span class="panel-en">LIVE</span></div>
+      <div id="workflow" class="workflow">
+        <div class="log-line"><span class="dim">尚未开始 —— 提交任务后这里会实时展示 Agent 的每一轮动作</span></div>
+      </div>
     </section>
 
-    <!-- 右：Tool Console -->
+    <!-- 右：Agent Console -->
     <section id="console-panel" class="panel">
-      <div class="panel-title">Tool&nbsp;Console<span class="panel-en">STDOUT</span></div>
+      <div class="panel-title">Agent&nbsp;Console<span class="panel-en">STDOUT</span></div>
       <div id="console" class="console">
         <div class="log-line"><span class="log-ts">--:--:--</span> <span class="dim">等待任务……</span></div>
       </div>
@@ -59,22 +61,21 @@
 
   <!-- ============ 底部：Result ============ -->
   <section id="result-panel" class="panel">
-    <div class="panel-title">Result<span class="panel-sub">数据 / 图片 / 分析</span></div>
+    <div class="panel-title">Result<span class="panel-sub">结论 / 图表 / 报告</span></div>
 
     <div id="result-empty" class="result-empty">
       <div class="empty-glyph">◎</div>
-      <div>尚无结果 —— 任务完成后在此展示股流数据、MATLAB 图表与报告</div>
+      <div>尚无结果 —— 任务完成后在此展示分析结论、MATLAB 图表与报告文件</div>
     </div>
 
     <div id="result-body" class="result-body hidden">
-      <!-- 左：数据 -->
+      <!-- 左：Agent 结论 -->
       <div class="result-data">
         <div class="stream-head">
-          <span class="stream-tag">STREAM</span>
-          <span class="stream-name" id="stream-name">S10</span>
-          <span class="prop-chips" id="prop-chips"></span>
+          <span class="stream-tag">ANSWER</span>
+          <span class="stream-name" id="answer-title">Agent 结论</span>
         </div>
-        <div class="tables-wrap" id="tables-wrap"></div>
+        <div class="answer-box" id="answer-text"></div>
       </div>
       <!-- 右：图 + 报告 -->
       <div class="result-side">
@@ -82,17 +83,14 @@
           <div class="card-title">MATLAB&nbsp;Analysis</div>
           <div class="fig-box"><img id="figure-img" alt="figure"></div>
           <div class="card-actions">
-            <button id="btn-open-img" class="btn small ghost">打开图片</button>
-            <button id="btn-redraw" class="btn small ghost">重新绘图</button>
+            <button id="btn-open-img" class="btn small ghost" disabled>打开图片</button>
           </div>
         </div>
         <div class="card">
           <div class="card-title">Report</div>
-          <div class="report-status" id="report-status">word_create 尚未生成报告</div>
+          <div class="report-status" id="report-status">任务完成后此处显示报告文件</div>
           <div class="card-actions">
-            <button id="btn-word" class="btn small primary">生成 Word</button>
-            <button id="btn-ppt" class="btn small ghost">生成 PPT</button>
-            <button id="btn-open-report" class="btn small ghost">打开报告</button>
+            <button id="btn-open-report" class="btn small ghost" disabled>打开报告</button>
           </div>
         </div>
       </div>

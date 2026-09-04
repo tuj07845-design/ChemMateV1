@@ -1,0 +1,8 @@
+{
+  "plot_type": "stream_tp",
+  "title": "B8精馏塔进出料温度-压力对比",
+  "export": "png",
+  "ylabel": "",
+  "ylabel_left": "Temperature / C",
+  "ylabel_right": "Pressure / bar"
+}

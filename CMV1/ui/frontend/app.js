@@ -1,5 +1,6 @@
-/* ChemMate V1 UI — 前端交互（Mock 模式）
-   数据流：轮询 /api/run/state 快照 → 重绘 workflow 卡片 / console / result */
+/* ChemMate V1 UI — 前端交互（真实 Agent 模式）
+   数据流：轮询 /api/run/state 快照 → 动态 workflow / console / result
+   workflow 步骤由后端 RealAgent 按真实运行轮次实时推送 */
 
 "use strict";
 
@@ -12,20 +13,18 @@ const state = {
   figurePath: null,
   reportPath: null,
   lastLogCount: 0,
+  stepKeys: [],
 };
 
 const QUICK_TASKS = [
-  "分析10万吨环己烷模型的S10物流，绘制物流组成图并生成报告",
-  "读取S10的T/P/流量并出Word报告",
+  "检查10万吨环己烷.bkp全流程有无报错，如有则生成带图的Word报告",
+  "分析B8精馏塔的进出物料衡算并出图",
+  "追踪环己烷组分沿流程的分布并生成PPT报告",
 ];
 
-/* ---------------- 状态徽章文案 ---------------- */
+/* ---------------- 状态徽章 ---------------- */
 const STATUS_TEXT = {
-  ready: "Ready",
-  running: "Running",
-  completed: "Completed",
-  error: "Error",
-  stopped: "Stopped",
+  ready: "Ready", running: "Running", completed: "Completed", error: "Error", stopped: "Stopped",
 };
 const badgeClass = { ready: "st-waiting", running: "st-running", completed: "st-success", error: "st-error", stopped: "st-error" };
 
@@ -35,8 +34,16 @@ function setSysBadge(status) {
   $("sys-badge-text").textContent = STATUS_TEXT[status] || status;
 }
 
-/* ---------------- Workflow 渲染 ---------------- */
+/* ---------------- Workflow（动态重建） ---------------- */
 let stepEls = null;
+
+function stepKeyList(steps) { return steps.map((s) => s.key); }
+
+function sameKeys(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
 
 function buildWorkflow(steps) {
   const box = $("workflow");
@@ -67,10 +74,10 @@ function buildWorkflow(steps) {
 }
 
 function monoAbbr(name) {
-  const map = { "User Task": "TASK", Agent: "AGT", "Agent Analysis": "ANL", Completed: "DONE" };
+  const map = { "User Task": "TASK", Completed: "DONE", "Agent 推理与工具调用": "AGT" };
   if (map[name]) return map[name];
-  const parts = name.split("_");
-  return (parts.length > 1 ? parts.map((p) => p[0]).join("") : name.slice(0, 3)).toUpperCase();
+  const parts = String(name).split("_");
+  return (parts.length > 1 ? parts.map((p) => p[0]).join("") : String(name).slice(0, 3)).toUpperCase();
 }
 
 function renderSteps(steps) {
@@ -80,20 +87,26 @@ function renderSteps(steps) {
     if (!el) return;
     el.className = "step-card st-" + s.status;
     el.querySelector(".step-badge").className = "step-badge st-" + s.status;
-    el.querySelector(".step-badge").textContent = badgeText[s.status] || s.status.toUpperCase();
-    el.querySelector(".step-dur").textContent = s.duration != null ? s.duration.toFixed(1) + " s" : "";
-    const res = el.querySelector(".step-result");
-    if (s.result) res.textContent = s.result;
+    el.querySelector(".step-badge").textContent = badgeText[s.status] || String(s.status).toUpperCase();
+    el.querySelector(".step-dur").textContent = s.duration != null ? Number(s.duration).toFixed(1) + " s" : "";
+    if (s.result) el.querySelector(".step-result").textContent = s.result;
   });
 }
 
-/* ---------------- Console 渲染 ---------------- */
+function refreshWorkflow(snap) {
+  const keys = stepKeyList(snap.steps);
+  if (!sameKeys(state.stepKeys, keys)) {
+    state.stepKeys = keys;
+    buildWorkflow(snap.steps);
+  }
+  renderSteps(snap.steps);
+}
+
+/* ---------------- Console ---------------- */
 function renderLogs(logs) {
   if (logs.length <= state.lastLogCount) {
-    if (logs.length < state.lastLogCount) {
-      $("console").innerHTML = "";
-      state.lastLogCount = 0;
-    } else return;
+    if (logs.length < state.lastLogCount) { $("console").innerHTML = ""; state.lastLogCount = 0; }
+    else return;
   }
   const box = $("console");
   for (let i = state.lastLogCount; i < logs.length; i++) {
@@ -115,62 +128,43 @@ function renderLogs(logs) {
   box.scrollTop = box.scrollHeight;
 }
 
-/* ---------------- Result 渲染 ---------------- */
-function fmt(v, d) { return Number(v).toFixed(d); }
+/* ---------------- Result ---------------- */
+function fileOf(p) { return String(p).split(/[\\/]/).pop(); }
 
 function renderResult(snap) {
   $("result-empty").classList.add("hidden");
   $("result-body").classList.remove("hidden");
 
-  const r = snap.result;
-  if (r && !$("tables-wrap").dataset.filled) {
-    $("stream-name").textContent = r.stream || "S10";
-
-    $("prop-chips").innerHTML = r.properties
-      .map((p) => '<span class="prop-chip">' + esc(p.cn) + "<b>" + fmt(p.value, p.decimals) + " " + esc(p.unit) + "</b></span>")
-      .join("");
-
-    const tbl = (title, en, blk) => {
-      const rows = blk.rows
-        .map((row) => "<tr><td>" + esc(row[0]) + '</td><td class="num">' + fmt(row[1], blk.decimals) + "</td></tr>")
-        .join("");
-      return (
-        '<div><div class="tbl-title">' + esc(title) + "<span>" + esc(en) + " · " + esc(blk.unit) + "</span></div>" +
-        '<table class="data-table"><thead><tr><th>组分</th><th class="num">数值</th></tr></thead>' +
-        "<tbody>" + rows + '<tr class="total"><td>合计</td><td class="num">' + fmt(blk.total, blk.decimals) + "</td></tr></tbody></table></div>"
-      );
-    };
-
-    $("tables-wrap").innerHTML =
-      tbl("质量流量", "Mass Flow", r.mass_flow) +
-      tbl("摩尔流量", "Mole Flow", r.mole_flow) +
-      tbl("摩尔分率", "Mole Fraction", r.mole_fraction);
-    $("tables-wrap").dataset.filled = "1";
+  if (snap.result && snap.result !== state.answerShown) {
+    state.answerShown = snap.result;
+    $("answer-text").textContent = snap.result;
   }
 
   if (snap.figure && snap.figure !== state.figurePath) {
     state.figurePath = snap.figure;
     $("figure-img").src = "/api/runs/" + snap.run_id + "/" + encodeURIComponent(fileOf(snap.figure)) + "?t=" + Date.now();
+    $("btn-open-img").disabled = false;
   }
 
   const docs = snap.reports || {};
-  if (docs.docx && docs.docx !== state.reportPath) {
-    state.reportPath = docs.docx;
-    $("report-status").innerHTML = '<span class="ok">✓ Word report generated</span><br>' + esc(fileOf(docs.docx));
+  if (docs.docx || docs.pptx) {
+    const parts = [];
+    if (docs.docx) parts.push('<span class="ok">✓ Word</span> ' + esc(fileOf(docs.docx)));
+    if (docs.pptx) parts.push('<span class="ok">✓ PPT</span> ' + esc(fileOf(docs.pptx)));
+    state.reportPath = docs.docx || docs.pptx || null;
+    $("report-status").innerHTML = parts.join("<br>");
+    $("btn-open-report").disabled = false;
   }
 }
-
-function fileOf(p) { return p.split(/[\\/]/).pop(); }
 
 function resetResult() {
   $("result-empty").classList.remove("hidden");
   $("result-body").classList.add("hidden");
-  $("tables-wrap").innerHTML = "";
-  delete $("tables-wrap").dataset.filled;
   $("figure-img").src = "";
-  $("report-status").textContent = "word_create 尚未生成报告";
+  $("report-status").textContent = "任务完成后此处显示报告文件";
   state.figurePath = null;
   state.reportPath = null;
+  delete state.answerShown;
 }
 
 /* ---------------- 轮询 ---------------- */
@@ -179,9 +173,8 @@ function poll() {
   fetch("/api/run/state?run_id=" + state.runId)
     .then((r) => r.json())
     .then((snap) => {
-      renderSteps(snap.steps);
+      refreshWorkflow(snap);
       renderLogs(snap.logs);
-
       if (snap.status === "running") {
         setSysBadge("running");
       } else {
@@ -191,11 +184,7 @@ function poll() {
           renderResult(snap);
         }
       }
-      if (snap.status === "running") {
-        state.pollTimer = setTimeout(poll, 400);
-      } else {
-        state.pollTimer = null;
-      }
+      state.pollTimer = snap.status === "running" ? setTimeout(poll, 400) : null;
     })
     .catch(() => { state.pollTimer = setTimeout(poll, 1200); });
 }
@@ -204,14 +193,9 @@ function setIdle(done) {
   state.running = false;
   $("btn-start").disabled = false;
   $("btn-stop").disabled = true;
-  $("btn-word").disabled = !done;
-  $("btn-ppt").disabled = !done;
-  $("btn-redraw").disabled = !done;
   $("btn-open-img").disabled = !state.figurePath;
   $("btn-open-report").disabled = !state.reportPath;
-  $("task-meta").textContent = done
-    ? "运行完成，用时见各节点耗时"
-    : "运行已结束";
+  $("task-meta").textContent = done ? "✓ 任务完成，详见下方 Result" : "运行结束";
 }
 
 /* ---------------- 动作 ---------------- */
@@ -222,16 +206,14 @@ function startRun() {
 
   state.running = true;
   state.lastLogCount = 0;
+  state.stepKeys = [];
+  stepEls = null;
   $("console").innerHTML = "";
+  $("workflow").innerHTML = '<div class="log-line"><span class="dim">Agent 启动中……</span></div>';
   resetResult();
   $("btn-start").disabled = true;
   $("btn-stop").disabled = false;
-  $("btn-word").disabled = true;
-  $("btn-ppt").disabled = true;
-  $("btn-redraw").disabled = true;
-  $("btn-open-img").disabled = true;
-  $("btn-open-report").disabled = true;
-  $("task-meta").textContent = "运行中……";
+  $("task-meta").textContent = "运行中……（真实 Aspen / MATLAB，请耐心等待）";
   setSysBadge("running");
 
   fetch("/api/run/start", {
@@ -242,11 +224,6 @@ function startRun() {
     .then((r) => r.json())
     .then((res) => {
       state.runId = res.run_id;
-      return fetch("/api/run/state?run_id=" + state.runId);
-    })
-    .then((r) => r.json())
-    .then((snap) => {
-      buildWorkflow(snap.steps);
       poll();
     })
     .catch(() => {
@@ -270,68 +247,27 @@ function clearAll() {
   state.runId = null;
   state.running = false;
   state.lastLogCount = 0;
-  $("console").innerHTML = '<div class="log-line"><span class="log-ts">--:--:--</span> <span class="dim">等待任务……</span></div>';
-  $("workflow").innerHTML = "";
+  state.stepKeys = [];
   stepEls = null;
+  $("console").innerHTML = '<div class="log-line"><span class="log-ts">--:--:--</span> <span class="dim">等待任务……</span></div>';
+  $("workflow").innerHTML = '<div class="log-line"><span class="dim">尚未开始 —— 提交任务后这里会实时展示 Agent 的每一轮动作</span></div>';
   resetResult();
   $("task-input").value = "";
   $("task-meta").textContent = "等待输入任务";
   setSysBadge("ready");
   $("btn-start").disabled = false;
   $("btn-stop").disabled = true;
-  $("btn-word").disabled = true;
-  $("btn-ppt").disabled = true;
-  $("btn-redraw").disabled = true;
   $("btn-open-img").disabled = true;
   $("btn-open-report").disabled = true;
 }
 
 function postJSON(url, body) {
-  return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-    .then((r) => r.json());
-}
-
-function generateReport(reportType) {
-  if (!state.runId) return;
-  const btn = reportType === "docx" ? $("btn-word") : $("btn-ppt");
-  btn.disabled = true;
-  btn.textContent = reportType === "docx" ? "生成中…" : "生成中…";
-  postJSON("/api/report", { run_id: state.runId, report_type: reportType })
-    .then((res) => {
-      if (res.success && res.file_path) {
-        if (reportType === "docx") {
-          state.reportPath = res.file_path;
-          $("report-status").innerHTML = '<span class="ok">✓ Word report generated</span><br>' + esc(fileOf(res.file_path));
-        } else {
-          $("report-status").innerHTML += '<br><span class="ok">✓ PPT report generated</span> ' + esc(fileOf(res.file_path));
-        }
-      } else {
-        $("report-status").textContent = "生成失败：" + (res.message || res.error || "未知错误");
-      }
-    })
-    .finally(() => {
-      btn.textContent = reportType === "docx" ? "生成 Word" : "生成 PPT";
-      btn.disabled = !state.reportPath && reportType === "docx" ? false : false;
-      $("btn-open-report").disabled = !state.reportPath;
-    });
+  return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
 }
 
 function openArtifact(path) {
   if (!path) return;
   postJSON("/api/open", { path }).then(() => {});
-}
-
-function redraw() {
-  if (!state.runId) return;
-  $("btn-redraw").disabled = true;
-  postJSON("/api/redraw", { run_id: state.runId }).then((res) => {
-    if (res.success && res.figure) {
-      state.figurePath = res.figure;
-      $("figure-img").src = "/api/runs/" + state.runId + "/" + encodeURIComponent(fileOf(res.figure)) + "?t=" + Date.now();
-    }
-    $("btn-redraw").disabled = false;
-    $("btn-open-img").disabled = false;
-  });
 }
 
 /* ---------------- 工具 ---------------- */
@@ -343,9 +279,6 @@ function esc(s) {
 $("btn-start").addEventListener("click", startRun);
 $("btn-stop").addEventListener("click", stopRun);
 $("btn-clear").addEventListener("click", clearAll);
-$("btn-word").addEventListener("click", () => generateReport("docx"));
-$("btn-ppt").addEventListener("click", () => generateReport("pptx"));
-$("btn-redraw").addEventListener("click", redraw);
 $("btn-open-img").addEventListener("click", () => openArtifact(state.figurePath));
 $("btn-open-report").addEventListener("click", () => openArtifact(state.reportPath));
 $("task-input").addEventListener("keydown", (e) => {

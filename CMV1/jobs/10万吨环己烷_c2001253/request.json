@@ -1,0 +1,8 @@
+{
+  "plot_type": "component_track",
+  "title": "环己烷沿流程分布追踪",
+  "export": "png",
+  "ylabel": "CYCLO-01 mole_fraction",
+  "ylabel_left": "",
+  "ylabel_right": ""
+}

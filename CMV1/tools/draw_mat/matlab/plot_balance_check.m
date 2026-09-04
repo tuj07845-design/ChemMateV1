@@ -70,9 +70,9 @@ function meta = plot_balance_check(tbl, req, fig_path)
     ylabel(ax2, get_req(req, 'ylabel', 'Flow'));
     % 标题直接写残差与相对误差，一眼看出闭合情况
     if isfinite(rel_err)
-        title(ax2, sprintf('Balance  \Delta=%.4g  (%.2f%%)', residual, 100 * rel_err));
+        title(ax2, sprintf('Balance  \\Delta=%.4g  (%.2f%%)', residual, 100 * rel_err));
     else
-        title(ax2, sprintf('Balance  \Delta=%.4g', residual));
+        title(ax2, sprintf('Balance  \\Delta=%.4g', residual));
     end
     draw_style(ax2);
 

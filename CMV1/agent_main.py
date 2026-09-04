@@ -195,7 +195,7 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
         _emit(f"{observation_str}\n" + "=" * 40)
         prompt_history.append(observation_str)
 
-        _emit("Tavily Key 是否读取到:", bool(os.environ.get("TAVILY_API_KEY")))
+        _emit(f"Tavily Key 是否读取到: {bool(os.environ.get('TAVILY_API_KEY'))}")
 
     # ---- 循环结束（Finish / 停止 / 轮数耗尽都走到这里）----
     if final_answer:

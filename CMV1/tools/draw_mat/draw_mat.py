@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .jobs import create_job_dir, read_result, write_job
+from memory.process_cache import remember_process_data, get_cached_process_data
 from .matlab_backend import MatlabFailed, run_draw_dispatch
 from .tables import DrawError, PLOT_TYPES, split_for_plot
 
@@ -53,20 +54,6 @@ TOOL_PARAMETERS = {
     "required": ["plot_type"],
 }
 
-_LAST_PROCESS_DATA: dict[str, Any] | None = None
-
-
-def remember_process_data(data: Any) -> Any:
-    """data_get 成功后调用，把结果缓存在 Python。"""
-    global _LAST_PROCESS_DATA
-    if isinstance(data, dict) and data.get("success"):
-        _LAST_PROCESS_DATA = data
-    return data
-
-
-def get_cached_process_data() -> dict[str, Any] | None:
-    """取回最近一次缓存的 data_get 结果（无缓存返回 None）。"""
-    return _LAST_PROCESS_DATA
 
 
 def wrap_data_get(fn: Callable) -> Callable:
@@ -208,7 +195,12 @@ def draw_mat(
         return _fail(pt, exc.code, exc.message)
 
     # ---- 写 job：request.json（请求）+ data.csv（拆好的表） ----
-    job_dir = create_job_dir(jobs_root or _default_jobs_root())
+    # 目录名带上模型文件名（如 10万吨环己烷_xxxxxxxx），方便辨认任务来源
+    model_name = None
+    fp = data.get("file_path") if isinstance(data, dict) else None
+    if fp:
+        model_name = Path(str(fp)).stem
+    job_dir = create_job_dir(jobs_root or _default_jobs_root(), name=model_name)
     auto_title = title or _caption(pt, title, labels)
     write_job(
         job_dir,

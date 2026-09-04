@@ -5,6 +5,22 @@ from pathlib import Path
 
 RUNS_DIR = Path(__file__).resolve().parent.parent / "runs"
 
+def record(session_id, role, content):
+    """记一条记录。记录失败只警告，绝不打断主流程。"""
+    try:
+        entry = {
+            "ts": datetime.now().isoformat(timespec="seconds"),
+            "session": session_id,
+            "role": role,
+            "content": content,
+        }
+        path = _log_path(session_id)
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[session_store] 记录失败({role}): {e}")
+
+
 
 def new_session():
     """开始一个新会话，返回 session_id。"""

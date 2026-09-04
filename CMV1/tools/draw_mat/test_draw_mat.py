@@ -109,7 +109,7 @@ class CacheTests(unittest.TestCase):
 
     def test_missing_without_cache(self):
         # 没数据也没缓存 → 明确报 missing_process_data
-        r = dm.draw_mat(plot_type="stream_tp", dry_run=True)
+        r = draw_mat(plot_type="stream_tp", dry_run=True)
         self.assertFalse(r["success"])
         self.assertEqual(r["error"], "missing_process_data")
 

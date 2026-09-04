@@ -1,0 +1,8 @@
+{
+  "plot_type": "stream_composition",
+  "title": "B8进料S8组成分析",
+  "export": "png",
+  "ylabel": "Mole fraction",
+  "ylabel_left": "",
+  "ylabel_right": ""
+}

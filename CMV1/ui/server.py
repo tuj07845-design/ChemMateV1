@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""ChemMate V1 UI — 本地演示服务器（Mock 模式，未接入主程序）。
+"""ChemMate V1 UI — 本地服务器（驱动真实主程序 agent_main.run_agent）。
 
 API：
     GET  /                          前端页面
-    POST /api/run/start   {task}    开始一次 Mock 运行 → {run_id}
+    POST /api/run/start   {task}    开始一次真实 Agent 运行 → {run_id}
     POST /api/run/stop    {run_id}  请求停止
     GET  /api/run/state?run_id=     全量快照（前端 400ms 轮询）
     GET  /api/runs/<id>/<file>      运行产物（图 / 报告）
@@ -24,13 +24,14 @@ UI_DIR = Path(__file__).resolve().parent
 RUNS_DIR = UI_DIR / "runs"
 RUNS_DIR.mkdir(exist_ok=True)
 
-from agent.mock_agent import MockAgent  # noqa: E402
 
-_runs: dict[str, MockAgent] = {}
+from agent.real_agent import RealAgent  # noqa: E402
+
+_runs: dict[str, RealAgent] = {}
 _runs_lock = threading.Lock()
 
 
-def _get_agent(run_id: str) -> MockAgent | None:
+def _get_agent(run_id: str) -> RealAgent | None:
     with _runs_lock:
         return _runs.get(run_id)
 
@@ -52,7 +53,7 @@ def create_app() -> Flask:
         task = str(body.get("task", "")).strip()
         if not task:
             return jsonify(error="task 不能为空"), 400
-        agent = MockAgent(task, RUNS_DIR)
+        agent = RealAgent(task, RUNS_DIR)
         with _runs_lock:
             _runs[agent.run_id] = agent
         agent.start()
