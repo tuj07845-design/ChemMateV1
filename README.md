@@ -3,6 +3,8 @@
 > 输入自然语言任务，Agent 自主调度工具，驱动 **Aspen Plus** 取数、**MATLAB** 绘图、自动生成 **Word/PPT** 诊断报告的化工智能体系统。
 
 ![badge](https://img.shields.io/badge/验收-90%2F100%20优秀-2ea44f)
+![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-lightgrey.svg)
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
 
 ## ✨ 功能特性
 
@@ -104,6 +106,12 @@ Agent 实际执行链：`data_get_process(×3, apwz 自动解包) → analyze_pr
 - 运行产物（jobs/reports/runs）不入库；密钥仅存于本地 `.env`
 - Aspen Plus 为单实例：同一时间只跑一个任务
 - 深度思考类模型在复杂决策轮耗时可达数分钟（模型特性），速度优化见验收报告后续优化清单
+
+## 📜 致谢与许可
+
+- 架构思路受 **Hello-Agents 教程**（[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)）启发；本仓库代码为独立实现，教程版权归原作者所有。
+- 本项目以 **Non-Commercial License** 发布（见 [LICENSE](LICENSE)）：允许自由查看、学习、研究、个人使用与简历展示；**商业使用需作者书面许可**。
+- 依赖组件均为 MIT/BSD/PSF 等宽松许可的开源库；Aspen Plus、MATLAB 为商业软件，运行需各自合法授权。
 
 ---
 
