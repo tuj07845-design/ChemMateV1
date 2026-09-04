@@ -1,8 +1,62 @@
 import os
 import json
+import shutil
+import tempfile
+import zipfile
 import win32com.client as win32
 from .small_tool import read_value, read_component_data, read_simulation_status
 from .block_type import get_block_type_data,get_block_real_type,collect_block_parameters,pick_key_parameters
+
+
+# ============================================================
+# 0. apwz 兼容：Aspen OLE 服务不能直接打开 .apwz（归档格式），
+#    这里自动把 apwz 里的 .bkp / .bkp.backup 解包出来供 COM 打开。
+# ============================================================
+
+def _fix_zip_name(raw):
+    """apwz 内条目名多为 GBK 编码，zipfile 按 cp437 读会乱码，这里修正。"""
+    try:
+        return raw.encode("cp437").decode("gbk")
+    except Exception:
+        return raw
+
+
+def _extract_from_apwz(apwz_path):
+    """从 .apwz 归档里解出可用的 bkp 文件，返回其路径；失败返回 None。
+
+    优先级：条目中的 .bkp > .bkp.backup（改名 .bkp）> .apw。
+    解包缓存目录：<系统临时目录>/chemmate_apwz/
+    """
+    try:
+        with zipfile.ZipFile(apwz_path) as z:
+            entries = [(i.filename, i) for i in z.infolist()]
+            cache = os.path.join(tempfile.gettempdir(), "chemmate_apwz")
+            os.makedirs(cache, exist_ok=True)
+            targets = []
+            for raw, info in entries:
+                n = _fix_zip_name(raw)
+                low = n.lower()
+                if low.endswith(".bkp") and not low.endswith(".bkp.backup"):
+                    targets.append((n, info, "bkp"))
+            for raw, info in entries:
+                n = _fix_zip_name(raw)
+                if n.lower().endswith(".bkp.backup"):
+                    targets.append((n[:-7] + ".bkp", info, "backup"))
+            for raw, info in entries:
+                n = _fix_zip_name(raw)
+                if n.lower().endswith(".apw"):
+                    targets.append((n, info, "apw"))
+            if not targets:
+                return None
+            n, info, kind = targets[0]
+            dst = os.path.join(cache, os.path.basename(n))
+            with z.open(info) as src, open(dst, "wb") as out:
+                shutil.copyfileobj(src, out)
+            print(f"[apwz] 解包方式 {kind} -> {dst}")
+            return dst
+    except Exception as e:
+        print(f"[apwz] 解包失败: {e}")
+        return None
 
 
 # ============================================================
@@ -39,6 +93,8 @@ def data_get_process(file_path):
     # 1. 检查路径
     # ========================================================
 
+    requested_path = file_path
+
     if not file_path:
 
         return {
@@ -58,6 +114,21 @@ def data_get_process(file_path):
             "error": "Aspen 文件不存在：" + file_path,
 
         }
+
+    # ========================================================
+    # 1.5 apwz 兼容：OLE 服务打不开 .apwz，先解包出 .bkp
+    # ========================================================
+
+    if str(file_path).lower().endswith(".apwz"):
+        bkp = _extract_from_apwz(file_path)
+        if bkp is None:
+            return {
+                "success": False,
+                "file_path": file_path,
+                "error": "apwz 解包失败：归档内未找到可用的 .bkp / .bkp.backup 文件",
+            }
+        print(f"已从 apwz 解包，改用: {bkp}")
+        file_path = bkp
 
     AspenSimulation = None
 
@@ -356,6 +427,10 @@ def data_get_process(file_path):
             "simulation_status": read_simulation_status(Data),
 
         }
+
+        # apwz 来源时记录原始请求路径（file_path 已是解包后的 bkp）
+        if requested_path != file_path:
+            result["requested_path"] = requested_path
 
         print("\n========================================")
         print("最终 JSON")

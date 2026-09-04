@@ -1,8 +1,0 @@
-{
-  "plot_type": "balance_check",
-  "title": "B8精馏塔物料衡算检查",
-  "export": "png",
-  "ylabel": "Mole flow / kmol/hr",
-  "ylabel_left": "",
-  "ylabel_right": ""
-}
