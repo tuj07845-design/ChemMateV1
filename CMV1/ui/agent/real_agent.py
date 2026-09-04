@@ -154,22 +154,43 @@ class RealAgent(threading.Thread):
         self._log("Agent", line[:200])
 
     def _collect_artifacts(self) -> None:
-        """任务结束后扫描 run_dir 下的真实产物，登记给前端展示。"""
+        """任务结束后扫描真实产物，复制到 run_dir 根目录并登记给前端展示。
+
+        前端通过 /api/runs/<run_id>/<文件名> 取文件，server 只从 run_dir 根
+        目录发送——产物若留在 jobs/<子目录>/ 或 reports/ 子目录里会 404，
+        所以统一复制到根目录（figure.png / report.docx / report.pptx）。
+        """
+        import shutil
         figure = None
         reports: dict[str, str] = {}
         jobs_dir = self.run_dir / "jobs"
         if jobs_dir.is_dir():
             figs = sorted(jobs_dir.glob("*/figure.png"), key=lambda p: p.stat().st_mtime)
             if figs:
-                figure = str(figs[-1])
+                dst = self.run_dir / "figure.png"
+                try:
+                    shutil.copy2(figs[-1], dst)
+                    figure = str(dst)
+                except OSError:
+                    figure = str(figs[-1])
         reps_dir = self.run_dir / "reports"
         if reps_dir.is_dir():
             docxs = sorted(reps_dir.glob("*.docx"), key=lambda p: p.stat().st_mtime)
             pptxs = sorted(reps_dir.glob("*.pptx"), key=lambda p: p.stat().st_mtime)
             if docxs:
-                reports["docx"] = str(docxs[-1])
+                dst = self.run_dir / ("report.docx")
+                try:
+                    shutil.copy2(docxs[-1], dst)
+                    reports["docx"] = str(dst)
+                except OSError:
+                    reports["docx"] = str(docxs[-1])
             if pptxs:
-                reports["pptx"] = str(pptxs[-1])
+                dst = self.run_dir / ("report.pptx")
+                try:
+                    shutil.copy2(pptxs[-1], dst)
+                    reports["pptx"] = str(dst)
+                except OSError:
+                    reports["pptx"] = str(pptxs[-1])
         with self._lock:
             if figure:
                 self.state["figure"] = figure
