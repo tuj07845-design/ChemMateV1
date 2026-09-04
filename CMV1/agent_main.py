@@ -11,7 +11,6 @@ from tools.analyze import analyze_process
 from tools.draw_mat import draw_mat
 from tools.report_create import report_create, build_sections_from_results
 from tools.bash_tool import bash
-from tools.draw_mat.draw_mat import remember_process_data
 from memory.process_cache import remember_process_data,get_cached_process_data,get_history,clear
 from memory.session_store import new_session,_log_path,record,load_session,last_answers
 
@@ -60,6 +59,13 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
     """
 
     _emit = log if log is not None else print
+
+    # ---- 会话记忆：开始新会话，记录用户请求 ----
+    session_id = new_session()
+    record(session_id, "user", task)
+    prev = last_answers(session_id)
+    if prev:
+        _emit("引用上次任务结论: " + prev[-1])
 
     api_key = LLM_API_KEY
     base_url = LLM_BASE_URL
@@ -110,6 +116,7 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
                 llm_output = truncated
                 _emit("已截断多余的 Thought-Action 对")
         _emit(f"模型输出:\n{llm_output}\n")
+        record(session_id, "thought", llm_output)
         prompt_history.append(llm_output)
 
         # 解析并执行行动
@@ -118,6 +125,7 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
             observation = "错误: 未能解析到 Action 字段。请确保你的回复严格遵循 'Thought: ... Action: ...' 的格式。"
             observation_str = f"Observation: {observation}"
             _emit(f"{observation_str}\n" + "=" * 40)
+            record(session_id, "observation", observation_str)
             prompt_history.append(observation_str)
             continue
         action_str = action_match.group(1).strip()
@@ -137,6 +145,7 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
             )
             observation_str = f"Observation: {observation}"
             _emit(f"{observation_str}\n" + "=" * 40)
+            record(session_id, "observation", observation_str)
             prompt_history.append(observation_str)
             continue
 
@@ -175,17 +184,24 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
                     and observation.get("success")
                 ):
                     _last_data_get_result = observation
-                    # 同步给 draw_mat 的进程内缓存（双保险）
+                    # 同步给 memory 的进程内缓存
                     remember_process_data(observation)
 
         # 记录观察结果（dict 转完整 JSON，不压缩）
         observation_str = (
             "Observation: " + _observation_text(observation)
         )
+        record(session_id, "observation", observation_str)
         _emit(f"{observation_str}\n" + "=" * 40)
         prompt_history.append(observation_str)
 
         _emit("Tavily Key 是否读取到:", bool(os.environ.get("TAVILY_API_KEY")))
+
+    # ---- 循环结束（Finish / 停止 / 轮数耗尽都走到这里）----
+    if final_answer:
+        record(session_id, "result", final_answer)
+    else:
+        record(session_id, "result", "（任务未完成：被停止或达到最大轮数）")
 
     return final_answer
 
