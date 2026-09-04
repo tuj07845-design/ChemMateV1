@@ -2,6 +2,7 @@ import re
 import ast
 import os
 import json
+import time
 
 from dotenv import load_dotenv
 load_dotenv()  # ★ 第 1 件事：读取 .env（必须先于一切配置）
@@ -150,6 +151,7 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
             continue
 
         tool_name, kwargs = parsed
+        _call_t0 = time.monotonic()  # 工具调用计时起点
 
         if tool_name not in available_tools:
             observation = f"错误:未定义的工具 '{tool_name}'"
@@ -186,6 +188,11 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
                     _last_data_get_result = observation
                     # 同步给 memory 的进程内缓存
                     remember_process_data(observation)
+
+        # 工具调用日志：动作 + 耗时（成功/失败统一记录）
+        _dt = time.monotonic() - _call_t0
+        record(session_id, "action", f"{tool_name} 耗时 {_dt:.1f}s")
+        _emit(f"[Tool] {tool_name} 耗时 {_dt:.1f}s")
 
         # 记录观察结果（dict 转完整 JSON，不压缩）
         observation_str = (

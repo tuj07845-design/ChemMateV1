@@ -1,0 +1,8 @@
+{
+  "plot_type": "balance_check",
+  "title": "设备进/出衡算",
+  "export": "png",
+  "ylabel": "Mole flow / kmol/hr",
+  "ylabel_left": "",
+  "ylabel_right": ""
+}
