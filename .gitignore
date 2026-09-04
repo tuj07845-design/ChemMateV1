@@ -35,6 +35,15 @@ Desktop.ini
 *.def
 commonshellsettings.xml
 
+
+# ============ 运行产物（不入库，GitHub 仓库保持干净）============
+# 任务图/报告/会话记录均属运行产物；需要展示的样例请放入 文档/ 或 docs/
+CMV1/jobs/
+CMV1/reports/
+CMV1/runs/
+CMV1/ui/runs/
+# 保留 MATLAB 样例数据（tools/draw_mat/matlab/sample_jobs 不受影响）
+
 # 静态分析临时脚本（勿入库）
 py_import_check*.py
 py_accept*.py
