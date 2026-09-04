@@ -197,6 +197,21 @@ class RealAgent(threading.Thread):
             if reports:
                 self.state["reports"] = reports
 
+        # ---- 归档到 CMV1/reports（用户查找方便；该目录已 gitignore，不入库）----
+        try:
+            archive_dir = CMV1_DIR / "reports"
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            fig_src = self.run_dir / "figure.png"
+            if fig_src.is_file():
+                shutil.copy2(fig_src, archive_dir / f"figure_{self.run_id}.png")
+            if reps_dir.is_dir():
+                for pat in ("*.docx", "*.pptx"):
+                    newest = sorted(reps_dir.glob(pat), key=lambda p: p.stat().st_mtime)
+                    if newest:
+                        shutil.copy2(newest[-1], archive_dir / newest[-1].name)
+        except OSError as exc:
+            print(f"[RealAgent] 归档到 CMV1/reports 失败: {exc}")
+
     # ---------------- 主流程 ----------------
 
     def run(self) -> None:
