@@ -2,7 +2,6 @@
 
 > 输入自然语言任务，Agent 自主调度工具，驱动 **Aspen Plus** 取数、**MATLAB** 绘图、自动生成 **Word/PPT** 诊断报告的化工智能体系统。
 
-![badge](https://img.shields.io/badge/验收-90%2F100%20优秀-2ea44f)
 ![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-lightgrey.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
 
@@ -99,7 +98,7 @@ Agent 实际执行链：`data_get_process(×3, apwz 自动解包) → analyze_pr
 
 ## 📚 文档
 
-完整开发历程、重构操作手册、记忆模块指南、Git/GitHub 说明书、UI 接入说明与 **V1 工程化验收报告（90/100 优秀）** 均在 [`文档/`](文档/) 目录。
+完整开发历程、重构操作手册、记忆模块指南、Git/GitHub 说明书、UI 接入说明与 V1 工程化验收标准均在 [`文档/`](文档/) 目录。
 
 ## ⚠️ 说明
 
@@ -115,4 +114,4 @@ Agent 实际执行链：`data_get_process(×3, apwz 自动解包) → analyze_pr
 
 ---
 
-*ChemMate V1 —— AI × 化工流程工程化 Demo，V1 验收 90/100 优秀（2026-09）*
+*ChemMate V1 —— AI × 化工流程工程化 Demo（2026）*
