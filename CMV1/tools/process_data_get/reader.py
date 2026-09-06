@@ -213,6 +213,8 @@ def data_get_process(file_path):
             mass_flow = read_component_data(Output, "MASSFLOW")
             mole_flow = read_component_data(Output, "MOLEFLOW")
             mole_fraction = read_component_data(Output, "MOLEFRAC")
+            mass_fraction = read_component_data(Output, "MASSFRAC")
+
 
             # ---------- 整理 ----------
 
@@ -231,6 +233,8 @@ def data_get_process(file_path):
                 "mole_flow": mole_flow,
 
                 "mole_fraction": mole_fraction,
+
+                "mass_fraction": mass_fraction,
 
             }
 
