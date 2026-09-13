@@ -1,0 +1,62 @@
+# ============================================================
+# ChemMate V1 .gitignore
+# 规则：真正生成的垃圾不进版本库；代码和产物全部保留
+# ============================================================
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# IDE 配置（PyCharm / VSCode）
+.idea/
+.vscode/
+
+# 密钥（绝不提交！）
+.env
+.env.local
+*.pem
+
+# 临时文件
+*.tmp
+.tmp_*
+~$*
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+
+# 运行日志（如果有）
+*.log
+# Aspen / 崩溃转储与运行时临时产物
+*.dmp
+*.def
+commonshellsettings.xml
+
+
+# ============ 运行产物（不入库，GitHub 仓库保持干净）============
+# 任务图/报告/会话记录均属运行产物；需要展示的样例请放入 文档/ 或 docs/
+CMV1/jobs/
+CMV1/reports/
+CMV1/runs/
+CMV1/ui/runs/
+# 保留 MATLAB 样例数据（tools/draw_mat/matlab/sample_jobs 不受影响）
+
+# 静态分析临时脚本（勿入库）
+py_import_check*.py
+py_accept*.py
+py_scan_*.py
+py_check_*.py
+py_tmp_*.py
+py_test_*.py
+py_*.py
+文档/
+legacy/
+.venv/
+
+# 旧 git 历史备份（含历史密钥，绝不入库/上传）
+.git_v1_backup/
+.git_old/
+*.git_backup/

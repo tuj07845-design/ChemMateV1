@@ -1,0 +1,6 @@
+{
+  "plot_type": "balance_check",
+  "title": "B7 flash mole flow",
+  "export": "png",
+  "ylabel": "Mole flow"
+}

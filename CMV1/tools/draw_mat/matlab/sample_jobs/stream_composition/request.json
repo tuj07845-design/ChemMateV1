@@ -1,0 +1,6 @@
+{
+  "plot_type": "stream_composition",
+  "title": "PROD mole fraction",
+  "export": "png",
+  "ylabel": "Mole fraction"
+}
