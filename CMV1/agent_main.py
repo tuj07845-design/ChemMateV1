@@ -15,6 +15,18 @@ from tools.bash_tool import bash
 from memory.process_cache import remember_process_data,get_cached_process_data,get_history,clear
 from memory.session_store import new_session,_log_path,record,load_session,last_answers
 
+# ---- 当前对话会话（同一进程内复用，让追问能接上下文）----
+_CURRENT_SESSION = None
+
+
+def get_conversation_session():
+    """返回当前对话的 session_id：首次调用创建，之后复用同一个。"""
+    global _CURRENT_SESSION
+    if _CURRENT_SESSION is None:
+        _CURRENT_SESSION = new_session()
+    return _CURRENT_SESSION
+
+
 # ---- Agent 层 ----
 from agents.llm_client import OpenAICompatibleClient
 from agents.action_parser import (
@@ -61,8 +73,8 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
 
     _emit = log if log is not None else print
 
-    # ---- 会话记忆：开始新会话，记录用户请求 ----
-    session_id = new_session()
+    # ---- 会话记忆：复用当前对话会话，记录用户请求 ----
+    session_id = get_conversation_session()
     record(session_id, "user", task)
     prev = last_answers(session_id)
     if prev:
@@ -81,6 +93,9 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
 
     user_prompt = task
     prompt_history = [f"用户请求: {user_prompt}"]
+    if prev:
+        # 把上一轮任务的结论带入本轮上下文（追问才能接上）
+        prompt_history.append(f"（此前任务的结论：{prev[-1]}）")
 
     # 保存最近一次 data_get 的完整结果，analyze_process / draw_mat
     # 未显式传 process_data 时自动注入。
