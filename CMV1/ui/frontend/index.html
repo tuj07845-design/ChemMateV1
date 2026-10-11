@@ -3,99 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChemMate V1 · AI 化工助手</title>
+  <title>ChemMate V1 · 化工流程工作台</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
-  <!-- ============ 顶栏 ============ -->
   <header id="topbar">
-    <div class="brand">
-      <div class="logo">CM</div>
-      <div class="brand-text">
-        <div class="brand-name">ChemMate&nbsp;V1</div>
-        <div class="brand-sub">AI Chemical Engineering Assistant</div>
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true">CM</div>
+      <div>
+        <div class="brand-name">ChemMate <span>V1</span></div>
+        <div class="brand-sub">PROCESS INTELLIGENCE WORKBENCH</div>
       </div>
     </div>
-    <div class="top-right">
-      <span class="env-tag">ASPEN&nbsp;PLUS&nbsp;·&nbsp;MATLAB&nbsp;·&nbsp;LIVE</span>
-      <span id="sys-badge" class="badge st-waiting"><i class="dot"></i><span id="sys-badge-text">Ready</span></span>
+    <div class="topbar-meta">
+      <div class="engine-stack">
+        <span class="engine-label">ENGINE</span>
+        <span>Aspen Plus</span><span class="meta-sep">/</span><span>MATLAB</span>
+      </div>
+      <div id="sys-badge" class="status-pill st-ready" role="status">
+        <i class="status-dot"></i><span id="sys-badge-text">就绪</span>
+      </div>
     </div>
   </header>
 
-  <!-- ============ 主体三栏 ============ -->
-  <main id="main">
-
-    <!-- 左：用户任务 -->
-    <section id="task-panel" class="panel">
-      <div class="panel-title">用户任务<span class="panel-en">TASK</span></div>
+  <main id="workspace">
+    <aside id="task-panel" class="panel task-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">01 / INPUT</span>
+          <h1>发起分析</h1>
+        </div>
+        <span class="heading-mark">TASK</span>
+      </div>
       <div class="task-body">
-        <textarea id="task-input" spellcheck="false"
-          placeholder="请输入你的化工任务……&#10;例如：检查10万吨环己烷.bkp全流程有无报错，如有则生成带图的Word报告。"></textarea>
+        <label class="field-label" for="task-input">告诉 Agent 你想检查什么</label>
+        <textarea id="task-input" spellcheck="false" placeholder="例如：检查 10 万吨环己烷模型的全流程报错，并生成带图的 Word 报告。"></textarea>
+        <div class="section-rule"><span>常用任务</span></div>
         <div class="quick-tasks" id="quick-tasks"></div>
-        <div class="btn-row">
-          <button id="btn-start" class="btn primary">开始执行</button>
-          <button id="btn-stop" class="btn danger" disabled>停止</button>
-          <button id="btn-clear" class="btn ghost">清空</button>
+
+        <div class="task-actions">
+          <button id="btn-start" class="btn primary"><span class="btn-icon" aria-hidden="true">▶</span><span>开始分析</span></button>
+          <button id="btn-stop" class="icon-btn danger" disabled title="停止当前任务" aria-label="停止当前任务"><span aria-hidden="true">■</span></button>
+          <button id="btn-clear" class="icon-btn ghost" title="清空任务" aria-label="清空任务"><span aria-hidden="true">⌫</span></button>
         </div>
-        <div class="task-meta" id="task-meta">等待输入任务</div>
+        <div id="task-meta" class="task-meta"><span class="meta-dot"></span>等待输入任务</div>
+      </div>
+      <div class="sidebar-foot">
+        <span class="sidebar-foot-label">SESSION</span>
+        <span>本地工作台 · 单任务执行</span>
+      </div>
+    </aside>
+
+    <section id="run-panel" class="panel run-panel">
+      <div class="panel-heading run-heading">
+        <div>
+          <span class="eyebrow">02 / EXECUTION</span>
+          <h2>运行进度</h2>
+        </div>
+        <div class="run-heading-right">
+          <span id="run-phase" class="phase-label">尚未开始</span>
+          <span class="heading-mark">LIVE</span>
+        </div>
+      </div>
+
+      <div class="run-context">
+        <div class="context-label">CURRENT TASK</div>
+        <div id="run-task" class="run-task">提交任务后，Agent 的执行步骤会在这里展开</div>
+        <div class="run-stats">
+          <span><b id="run-round">—</b> 轮次</span>
+          <span class="stat-sep">·</span>
+          <span><b id="run-elapsed">00:00</b> 用时</span>
+          <span class="stat-sep">·</span>
+          <span id="run-updated">等待运行</span>
+        </div>
+      </div>
+
+      <div class="workflow-wrap">
+        <div class="subheading"><span>执行链路</span><span class="subheading-note">AGENT TRACE</span></div>
+        <div id="workflow" class="workflow">
+          <div class="empty-state compact"><span class="empty-line"></span><span>提交任务后，这里会显示每个分析阶段</span></div>
+        </div>
+      </div>
+
+      <div class="console-drawer">
+        <button id="btn-console-toggle" class="drawer-toggle" type="button" aria-expanded="false">
+          <span class="drawer-chevron" aria-hidden="true">›</span><span>调试日志</span><span id="log-count" class="log-count">0 条</span>
+        </button>
+        <div id="console" class="console hidden" aria-live="polite">
+          <div class="log-line"><span class="log-ts">--:--:--</span><span class="dim">等待任务……</span></div>
+        </div>
       </div>
     </section>
 
-    <!-- 中：Agent Workflow（动态步骤） -->
-    <section id="workflow-panel" class="panel">
-      <div class="panel-title">Agent&nbsp;Workflow<span class="panel-en">LIVE</span></div>
-      <div id="workflow" class="workflow">
-        <div class="log-line"><span class="dim">尚未开始 —— 提交任务后这里会实时展示 Agent 的每一轮动作</span></div>
+    <aside id="result-panel" class="panel result-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">03 / DELIVERY</span>
+          <h2>结果交付</h2>
+        </div>
+        <span class="heading-mark">OUTPUT</span>
       </div>
-    </section>
 
-    <!-- 右：Agent Console -->
-    <section id="console-panel" class="panel">
-      <div class="panel-title">Agent&nbsp;Console<span class="panel-en">STDOUT</span></div>
-      <div id="console" class="console">
-        <div class="log-line"><span class="log-ts">--:--:--</span> <span class="dim">等待任务……</span></div>
+      <div id="result-empty" class="result-empty">
+        <div class="empty-orbit" aria-hidden="true">◎</div>
+        <strong>还没有结果</strong>
+        <span>完成一次分析后，结论、图表和报告会集中出现在这里。</span>
       </div>
-    </section>
+
+      <div id="result-body" class="result-body hidden">
+        <section class="answer-section">
+          <div class="subheading"><span>Agent 结论</span><span id="answer-status" class="result-tag">WAITING</span></div>
+          <div id="answer-text" class="answer-box"></div>
+        </section>
+
+        <section class="artifact-section">
+          <div class="subheading"><span>图表预览</span><span class="subheading-note">MATLAB</span></div>
+          <div class="figure-frame">
+            <div id="figure-empty" class="figure-empty">完成绘图后显示</div>
+            <img id="figure-img" alt="MATLAB 分析图表">
+          </div>
+          <button id="btn-open-img" class="artifact-btn" disabled><span aria-hidden="true">↗</span><span>在系统中打开图片</span></button>
+        </section>
+
+        <section class="artifact-section reports-section">
+          <div class="subheading"><span>报告文件</span><span class="subheading-note">REPORTS</span></div>
+          <div id="report-status" class="report-status">任务完成后显示可用文件</div>
+          <div class="report-actions">
+            <button id="btn-open-report" class="artifact-btn" disabled><span aria-hidden="true">↗</span><span>打开报告</span></button>
+          </div>
+        </section>
+      </div>
+    </aside>
   </main>
-
-  <!-- ============ 底部：Result ============ -->
-  <section id="result-panel" class="panel">
-    <div class="panel-title">Result<span class="panel-sub">结论 / 图表 / 报告</span></div>
-
-    <div id="result-empty" class="result-empty">
-      <div class="empty-glyph">◎</div>
-      <div>尚无结果 —— 任务完成后在此展示分析结论、MATLAB 图表与报告文件</div>
-    </div>
-
-    <div id="result-body" class="result-body hidden">
-      <!-- 左：Agent 结论 -->
-      <div class="result-data">
-        <div class="stream-head">
-          <span class="stream-tag">ANSWER</span>
-          <span class="stream-name" id="answer-title">Agent 结论</span>
-        </div>
-        <div class="answer-box" id="answer-text"></div>
-      </div>
-      <!-- 右：图 + 报告 -->
-      <div class="result-side">
-        <div class="card">
-          <div class="card-title">MATLAB&nbsp;Analysis</div>
-          <div class="fig-box"><img id="figure-img" alt="figure"></div>
-          <div class="card-actions">
-            <button id="btn-open-img" class="btn small ghost" disabled>打开图片</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Report</div>
-          <div class="report-status" id="report-status">任务完成后此处显示报告文件</div>
-          <div class="card-actions">
-            <button id="btn-open-report" class="btn small ghost" disabled>打开报告</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <script src="/static/app.js"></script>
 </body>

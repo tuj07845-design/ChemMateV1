@@ -1,3 +1,5 @@
+import time
+
 from openai import OpenAI
 class OpenAICompatibleClient:
             """
@@ -11,19 +13,29 @@ class OpenAICompatibleClient:
             def generate(self, prompt: str, system_prompt: str) -> str:
                 """调用LLM API来生成回应。"""
                 print("正在调用大语言模型...")
-                try:
-                    messages = [
-                        {'role': 'system', 'content': system_prompt},
-                        {'role': 'user', 'content': prompt}
-                    ]
-                    response = self.client.chat.completions.create(
-                        model=self.model,
-                        messages=messages,
-                        stream=False,
-                    )
-                    answer = response.choices[0].message.content
-                    print("大语言模型响应成功。")
-                    return answer
-                except Exception as e:
-                    print(f"调用LLM API时发生错误: {e}")
-                    return "错误:调用语言模型服务时出错。"
+                messages = [
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': prompt}
+                ]
+                last_error = None
+                for attempt in range(2):
+                    try:
+                        response = self.client.chat.completions.create(
+                            model=self.model,
+                            messages=messages,
+                            stream=False,
+                        )
+                        answer = response.choices[0].message.content
+                        if not answer or not str(answer).strip():
+                            raise RuntimeError("模型返回空内容")
+                        print("大语言模型响应成功。")
+                        return str(answer)
+                    except Exception as exc:
+                        last_error = exc
+                        print(f"调用LLM API时发生错误（第 {attempt + 1} 次）: {exc}")
+                        if attempt == 0:
+                            time.sleep(1.0)
+
+                raise RuntimeError(
+                    f"LLM 调用失败（{type(last_error).__name__}）：{last_error}"
+                ) from last_error

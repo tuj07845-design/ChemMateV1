@@ -120,6 +120,9 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
 
         # 调用 LLM 思考
         llm_output = llm.generate(full_prompt, system_prompt=AGENT_SYSTEM_PROMPT)
+        llm_output = str(llm_output).strip()
+        # 兼容模型把协议包在 Markdown 代码块中，或使用中文冒号。
+        llm_output = re.sub(r"^```(?:text|plain)?\s*|\s*```$", "", llm_output, flags=re.IGNORECASE)
         # 截断多余的 Thought-Action
         match = re.search(
             r'(Thought:.*?Action:.*?)(?=\n\s*(?:Thought:|Action:|Observation:)|\Z)',
@@ -136,7 +139,7 @@ def run_agent(task, max_rounds=20, stop_event=None, log=None):
         prompt_history.append(llm_output)
 
         # 解析并执行行动
-        action_match = re.search(r"Action: (.*)", llm_output, re.DOTALL)
+        action_match = re.search(r"Action\s*[：:]\s*(.+)", llm_output, re.IGNORECASE | re.DOTALL)
         if not action_match:
             observation = "错误: 未能解析到 Action 字段。请确保你的回复严格遵循 'Thought: ... Action: ...' 的格式。"
             observation_str = f"Observation: {observation}"

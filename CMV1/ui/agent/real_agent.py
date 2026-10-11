@@ -250,6 +250,8 @@ class RealAgent(threading.Thread):
                 self._set_status("error", "✗ Agent 未返回最终答案", ok=False)
         except Exception as exc:
             self._mark_rounds("error")
+            with self._lock:
+                self.state["result"] = f"任务失败：{exc}"
             self._set_status("error", f"✗ RealAgent 异常：{exc}", ok=False)
         finally:
             pythoncom.CoUninitialize()
