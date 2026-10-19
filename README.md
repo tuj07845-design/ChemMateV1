@@ -88,6 +88,10 @@ python Chem_Mate_V1.py       # 自动打开 http://127.0.0.1:8765
 
 Agent 实际执行链：`data_get_process(×3, apwz 自动解包) → analyze_process → draw_mat → report_create`，全程自动，报告落盘后提供路径。会话全流程记录于 `runs/session_*.jsonl`。
 
+## 🎬 演示视频
+
+完整端到端演示见 [`演示视频.mp4`](演示视频.mp4)。
+
 ## 📐 设计要点
 
 - **Tool 即服务**：每个工具包独立、结构化返回（success/error/message），经 `tools/*/__init__.py` 只暴露 1–2 个入口
