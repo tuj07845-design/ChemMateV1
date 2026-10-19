@@ -2,10 +2,9 @@
 # ⑥ 主分析函数
 # ============================================================
 
-from .utils import _number, _value, _unit, _numeric_value, _find_key, _stream_summary
 from .basic_checks import check_process
 from .component_track import find_component
-from .change_analysis import compare_streams, detect_stream_changes
+from .change_analysis import detect_stream_changes
 
 
 import json

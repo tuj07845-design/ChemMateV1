@@ -1,7 +1,7 @@
 # ============================================================
 # 基础工具
 # ============================================================
-from component_dicts import COMPONENT_ALIASES
+from .component_dicts import COMPONENT_ALIASES
 
 
 
