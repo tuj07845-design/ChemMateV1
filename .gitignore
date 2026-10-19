@@ -9,15 +9,21 @@ __pycache__/
 *.pyo
 .pytest_cache/
 *.egg-info/
-
+docs
 # IDE 配置（PyCharm / VSCode）
 .idea/
 .vscode/
 
 # 密钥（绝不提交！）
 .env
+CMV1/.env
 .env.local
 *.pem
+
+# LangGraph Dev Server 运行时缓存
+.langgraph_api/
+CMV1/.langgraph_api/
+CMV1/LangSmith_GUI/.langgraph_api/
 
 # 临时文件
 *.tmp
@@ -38,6 +44,7 @@ commonshellsettings.xml
 
 # ============ 运行产物（不入库，GitHub 仓库保持干净）============
 # 任务图/报告/会话记录均属运行产物；需要展示的样例请放入 文档/ 或 docs/
+# 注意：UI 与命令行的产物已统一到 CMV1/jobs、CMV1/reports（不再写 ui/runs）
 CMV1/jobs/
 CMV1/reports/
 CMV1/runs/

@@ -1,67 +1,8 @@
 
 from __future__ import annotations
 
-import os
-from datetime import datetime
-from pathlib import Path
-from typing import Any
 
 
-
-TOOL_NAME = "report_create"
-
-TOOL_DESCRIPTION = (
-    "生成 Word(.docx) 或 PPT(.pptx) 分析报告。"
-    "把要写进报告的内容按 sections 传入；"
-    "图片用 image 类型，path 填 draw_mat 返回的 image_path。"
-    "report_type 为 docx 或 pptx。"
-    "输出已按中文阅读排版（Word：宋体正文/黑体标题/1.5 倍行距；PPT：微软雅黑）。"
-)
-
-TOOL_PARAMETERS = {
-    "type": "object",
-    "properties": {
-        "report_type": {
-            "type": "string",
-            "enum": ["docx", "pptx"],
-            "description": "报告格式：docx（Word）或 pptx（PowerPoint）",
-        },
-        "title": {
-            "type": "string",
-            "description": "报告标题",
-        },
-        "sections": {
-            "type": "array",
-            "description": "内容块列表，每块一个 dict，见模块文档",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "type": {
-                        "type": "string",
-                        "enum": ["heading", "paragraph", "bullets", "table", "image"],
-                    },
-                    "level": {"type": "integer", "description": "heading 用，1~3"},
-                    "text": {"type": "string", "description": "heading/paragraph 用"},
-                    "items": {"type": "array", "items": {"type": "string"}, "description": "bullets 用"},
-                    "headers": {"type": "array", "items": {"type": "string"}, "description": "table 用"},
-                    "rows": {"type": "array", "description": "table 用，每行一个值列表"},
-                    "path": {"type": "string", "description": "image 用，图片路径"},
-                    "caption": {"type": "string", "description": "image 用，图注"},
-                },
-                "required": ["type"],
-            },
-        },
-        "output_path": {
-            "type": "string",
-            "description": "输出文件路径；不传则默认放 reports/ 下",
-        },
-        "author": {
-            "type": "string",
-            "description": "作者/署名，默认 ChemMate V1",
-        },
-    },
-    "required": ["report_type", "title", "sections"],
-}
 
 # 合法的 section 类型
 SECTION_TYPES = ("heading", "paragraph", "bullets", "table", "image")
@@ -198,14 +139,5 @@ def _fmt_unit(v, u) -> str:
     return s
 
 
-# ============================================================
-# Agent Tool 注册信息
-# ============================================================
 
-def tool_spec() -> dict:
-    return {
-        "name": TOOL_NAME,
-        "description": TOOL_DESCRIPTION,
-        "parameters": TOOL_PARAMETERS,
-    }
 

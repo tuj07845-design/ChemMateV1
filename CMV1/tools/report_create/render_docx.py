@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Any
 
 CN_BODY_FONT = "宋体"          # Word 正文中文
-CN_HEAD_FONT = "黑体"          # Word 标题中文
-LATIN_BODY_FONT = "Times New Roman"
-LATIN_HEAD_FONT = "Arial"
+CN_HEAD_FONT = "宋体"          # Word 标题中文（与正文统一为宋体）
+LATIN_BODY_FONT = "宋体"       # 西文也用宋体：整篇字体统一
+LATIN_HEAD_FONT = "宋体"
 
 # ============================================================
 # Word 渲染
@@ -72,8 +72,45 @@ def _docx_add_page_number(footer_paragraph) -> None:
     _docx_run_font(footer_paragraph.add_run(" 页"), size=Pt(9))
 
 
+def _docx_force_theme_font(doc, font: str) -> None:
+    """把文档主题（theme1.xml）的东亚/西文字体统一成 font。
+
+    为什么需要：Word 内置的标题样式、表格样式（如 Light Grid Accent 1 的
+    firstRow）用的是 **主题字体**（majorEastAsia / majorHAnsi），而不是写死的
+    字体名。只改 styles.xml 不够 —— 表头仍按主题渲染成微软雅黑，
+    出现「正文宋体、表头雅黑」的混排。
+
+    实现注意：python-docx 里 theme 是普通 Part，只有 `_blob`（bytes），
+    没有解析成 XML 元素，所以必须直接改字节再写回 `_blob`。
+    仅设置元素属性是不生效的（改动会被丢弃）。
+    """
+    import re as _re
+    try:
+        parts = doc.part.package.parts
+    except Exception:
+        return
+    for part in parts:
+        if not str(getattr(part, "partname", "")).endswith("theme1.xml"):
+            continue
+        try:
+            blob = part.blob.decode("utf-8")
+            # <a:ea typeface="..."> 默认东亚字体
+            blob = _re.sub(r'(<a:ea\s+typeface=")[^"]*(")',
+                           lambda m: m.group(1) + font + m.group(2), blob)
+            # <a:latin typeface="..."> 默认西文字体
+            blob = _re.sub(r'(<a:latin\s+typeface=")[^"]*(")',
+                           lambda m: m.group(1) + font + m.group(2), blob)
+            # <a:font script="Hans" typeface="..."> 简体中文实际用字
+            blob = _re.sub(r'(<a:font\s+script="Hans"\s+typeface=")[^"]*(")',
+                           lambda m: m.group(1) + font + m.group(2), blob)
+            part._blob = blob.encode("utf-8")
+        except Exception:
+            # 主题改写失败不影响主流程：run 级字体已显式设置
+            pass
+
+
 def _render_docx(title: str, sections: list, output_path: Path, author: str) -> Path:
-    """渲染成 .docx（排版约定见模块文档：宋体正文/黑体标题/1.5 倍行距/首行缩进）。"""
+    """渲染成 .docx（排版约定见模块文档：全文宋体/1.5 倍行距/首行缩进）。"""
     from docx import Document
     from docx.shared import Pt, Inches, Cm, RGBColor
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -88,7 +125,7 @@ def _render_docx(title: str, sections: list, output_path: Path, author: str) -> 
     sec0.top_margin = sec0.bottom_margin = Cm(2.54)
     sec0.left_margin = sec0.right_margin = Cm(3.18)
 
-    # glm —— 样式：正文宋体小四、1.5 倍行距；标题黑体加粗；项目符号宋体
+    # glm —— 样式：全文宋体（标题/正文统一）、正文小四、1.5 倍行距
     normal = doc.styles["Normal"]
     _docx_style_font(normal, CN_BODY_FONT, LATIN_BODY_FONT)
     normal.font.size = Pt(12)
@@ -124,9 +161,16 @@ def _render_docx(title: str, sections: list, output_path: Path, author: str) -> 
     except Exception:
         pass
 
+    # glm —— 主题字体也设为宋体：标题/表格样式走的是 majorEastAsia 主题字体，
+    # 不设的话 Word 会用主题里的默认值（微软雅黑），出现「正文宋体、表头雅黑」
+    _docx_force_theme_font(doc, CN_BODY_FONT)
+
     # glm —— 封面：标题居中（Title 样式）
     h = doc.add_heading(title, level=0)
     h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # 显式给 run 设字体，避免只靠样式继承
+    for _r in h.runs:
+        _docx_run_font(_r, east=CN_HEAD_FONT, latin=LATIN_HEAD_FONT)
 
     # glm —— 副信息：生成时间 + 作者（小字灰色居中）
     meta = doc.add_paragraph()
@@ -145,13 +189,18 @@ def _render_docx(title: str, sections: list, output_path: Path, author: str) -> 
         if stype == "heading":
             level = int(sec.get("level", 1) or 1)
             level = max(1, min(3, level))
-            doc.add_heading(str(sec.get("text", "")), level=level)
+            hp = doc.add_heading(str(sec.get("text", "")), level=level)
+            # 显式给 run 设字体：标题样式走主题字体，不显式设会被渲染成微软雅黑
+            for _r in hp.runs:
+                _docx_run_font(_r, east=CN_HEAD_FONT, latin=LATIN_HEAD_FONT)
 
         elif stype == "paragraph":
             # glm —— 正文：两端对齐 + 首行缩进两字符
             p = doc.add_paragraph(str(sec.get("text", "")))
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             _docx_first_line_indent(p, 2)
+            for _r in p.runs:
+                _docx_run_font(_r, east=CN_BODY_FONT, latin=LATIN_BODY_FONT)
 
         elif stype == "bullets":
             items = sec.get("items") or []
@@ -159,6 +208,8 @@ def _render_docx(title: str, sections: list, output_path: Path, author: str) -> 
                 for it in items:
                     bp = doc.add_paragraph(str(it), style="List Bullet")
                     bp.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                    for _r in bp.runs:
+                        _docx_run_font(_r, east=CN_BODY_FONT, latin=LATIN_BODY_FONT)
 
         elif stype == "table":
             headers = sec.get("headers") or []

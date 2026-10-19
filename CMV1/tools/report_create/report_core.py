@@ -65,10 +65,39 @@ def _validate_sections(sections: list) -> list:
         cleaned.append(sec)
     return cleaned
 
-def _default_output_path(report_type: str, title: str) -> Path:
-    """默认输出到 cwd/reports/ 下，文件名用时间戳。"""
-    root = Path(os.environ.get("CHEMMATE_REPORTS_DIR") or Path.cwd() / "reports")
+def _reports_root() -> Path:
+    """报告根目录：环境变量 > 项目内 CMV1/reports。
+
+    ★ 不能用 Path.cwd()：UI 从 CMV1/ui 启动时 cwd 就是 CMV1/ui，
+      报告会落到 CMV1/ui/reports，而前端只放行 CMV1/jobs、CMV1/reports、
+      CMV1/ui/runs —— 结果就是「报告生成了但前端看不到、也打不开」（403）。
+      改为相对本文件定位，保证与启动方式无关。
+    """
+    env = os.environ.get("CHEMMATE_REPORTS_DIR")
+    if env and str(env).strip():
+        return Path(env)
+    # 本文件在 CMV1/tools/report_create/ 下：parents[2] == CMV1
+    return Path(__file__).resolve().parents[2] / "reports"
+
+
+def _resolve_output_path(report_type: str, title: str, output_path: str | Path | None) -> Path:
+    """统一把报告收拢到 reports 目录（CHEMMATE_REPORTS_DIR，默认 CMV1/reports）。
+
+    未传 output_path → 标题 + 时间戳命名；
+    传入路径在 reports 根内 → 原样使用；
+    越界路径（别的目录 / 相对路径）→ 只取文件名落回 reports 根，
+    保证所有报告都收在统一目录里（UI 产物登记依赖该约定）。
+    """
+    root = _reports_root()
     root.mkdir(parents=True, exist_ok=True)
+    if output_path:
+        candidate = Path(output_path)
+        try:
+            if candidate.resolve().is_relative_to(root.resolve()):
+                return candidate
+        except OSError:
+            pass
+        return root / candidate.name
     # 文件名：标题前若干字 + 时间戳，去非法字符
     safe = "".join(c for c in title if c not in r'\/:*?"<>|')[:20].strip() or "report"
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -108,7 +137,7 @@ def report_create(
     except ReportError as exc:
         return _fail(exc.code, exc.message)
 
-    out = Path(output_path) if output_path else _default_output_path(rt, str(title))
+    out = _resolve_output_path(rt, str(title), output_path)
     # 保证扩展名
     if out.suffix.lower() != f".{rt}":
         out = out.with_suffix(f".{rt}")

@@ -1,14 +1,11 @@
-# ============================================================
-# ⑥ 主分析函数
-# ============================================================
-
-from .utils import _number, _value, _unit, _numeric_value, _find_key, _stream_summary
-from .basic_checks import check_process
-from .component_track import find_component
-from .change_analysis import compare_streams, detect_stream_changes
-
+"""analyze：薄分析层（基础检查 + 组分追踪 + 前后变化）。"""
 
 import json
+
+from .basic_checks import check_process
+from .change_analysis import detect_stream_changes
+from .component_track import find_component
+
 
 def _coerce_process_data(process_data):
     """
@@ -305,9 +302,8 @@ def analyze(
 
 
 # ============================================================
-# ⑦ Agent Tool 注册入口（字符串参数友好）
+# Agent Tool 注册入口（字符串参数友好）
 # ============================================================
-
 def analyze_process(
     process_data,
     component=None,

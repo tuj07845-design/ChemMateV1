@@ -174,6 +174,10 @@ def _run_batch(job_dir: Path, draw_path: Path, timeout: int) -> None:
         ) from exc
     except subprocess.TimeoutExpired as exc:
         raise MatlabFailed(f"MATLAB 超时（{timeout}s）") from exc
+    except OSError as exc:
+        # ds: subprocess 启动/通信层的 OSError（如 [Errno 22] Invalid argument）
+        # ds: 不归为 FileNotFoundError，若不拦会穿透 draw_mat 直接崩掉整个任务
+        raise MatlabFailed(f"调用 MATLAB 子进程失败: {exc}") from exc
 
     # 非零退出码：把 stderr/stdout 带回给调用方
     if proc.returncode != 0:

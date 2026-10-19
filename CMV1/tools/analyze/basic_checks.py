@@ -1,16 +1,14 @@
 # ============================================================
-# ① 基础数据检查
+# ① 基础数据检查（单流股 + 全流程）
 # ============================================================
+# findings 统一格式（本包通用）：
+#   {"level": "error" | "warning" | "info", "type": "标签字符串",
+#    "stream" / "block" / "component" / "value"（视检查项而定）,
+#    "message": "给人看的话"}
+from .utils import _numeric_value
 
 
-
-import json
-from .utils import _find_key, _number, _numeric_value, _stream_summary, _unit, _value
-
-def check_stream(
-    stream_name,
-    stream
-):
+def check_stream(stream_name, stream):
     """
     检查一个 Stream 的明显数据问题。
 
@@ -284,7 +282,8 @@ def check_stream(
 # ============================================================
 # ② 整个流程的数据检查
 # ============================================================
-
+# 注：missing_output_stream 这条 finding 里的 stream 字段取自上一轮循环
+#     残留的变量，语义不成立；为保持输出一致，暂按原样保留（改动会产生对拍差异）。
 def check_process(process_data):
     """
     对整个 data_get 返回结果进行基础检查。

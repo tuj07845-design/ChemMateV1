@@ -1,11 +1,7 @@
-# ============================================================
-# ③ 查找组件
-# ============================================================
+"""component_track：沿所有流股追踪指定组分。"""
 
+from .utils import _find_key, _numeric_value, _unit
 
-
-import json
-from .utils import _find_key, _number, _numeric_value, _stream_summary, _unit, _value
 
 def find_component(
     process_data,

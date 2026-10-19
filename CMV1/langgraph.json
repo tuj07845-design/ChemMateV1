@@ -1,0 +1,19 @@
+{
+  "$schema": "https://langgra.ph/schema.json",
+  "python_version": "3.13",
+  "dependencies": [
+    "langchain>=1.4",
+    "langchain-openai",
+    "langgraph",
+    "python-dotenv",
+    "pywin32",
+    "python-docx",
+    "python-pptx",
+    "matplotlib",
+    "pillow"
+  ],
+  "graphs": {
+    "chemate": "./LangSmith_GUI/langgraph_entry.py:agent"
+  },
+  "env": "../.env"
+}

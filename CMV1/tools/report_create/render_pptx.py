@@ -5,13 +5,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-CN_SLIDE_FONT = "微软雅黑"     # PPT 全文
+CN_SLIDE_FONT = "宋体"     # PPT 全文（与 Word 报告统一为宋体）
 
 # ============================================================
 # PPT 渲染
 # ============================================================
 
-# glm —— PPT run 中西文字体（a:latin + a:ea 同设微软雅黑）
+# glm —— PPT run 中西文字体（a:latin + a:ea 同设宋体）
 def _pptx_run_font(run, size=None, bold=None, color=None, font: str = CN_SLIDE_FONT) -> None:
     """给 PPT 文字 run 设置中西文字体（a:latin + a:ea）、字号、加粗、颜色。"""
     from pptx.util import Pt
@@ -37,7 +37,7 @@ def _pptx_run_font(run, size=None, bold=None, color=None, font: str = CN_SLIDE_F
 
 def _render_pptx(title: str, sections: list, output_path: Path, author: str) -> Path:
     """渲染成 .pptx。每个 heading 开新页，同页内累积后续内容。
-    排版约定见模块文档：全文微软雅黑，正文 18pt 行距 1.2，表头加粗。"""
+    排版约定见模块文档：全文宋体（与 Word 报告统一），正文 18pt 行距 1.2，表头加粗。"""
     from pptx import Presentation
     from pptx.util import Inches, Pt, Emu
     from pptx.dml.color import RGBColor
@@ -169,7 +169,7 @@ def _render_pptx(title: str, sections: list, output_path: Path, author: str) -> 
                     n_rows, n_cols, body_left, cur_y, body_width, tbl_h
                 )
                 table = tbl_shape.table
-                # glm —— 表头 16pt 加粗、表体 14pt（微软雅黑）
+                # glm —— 表头 16pt 加粗、表体 14pt（宋体）
                 for j, htext in enumerate(headers):
                     cell = table.cell(0, j)
                     cell.text = str(htext)

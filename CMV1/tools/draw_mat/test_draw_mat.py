@@ -2,7 +2,9 @@
 """
 ChemMate V1 — draw_mat / tables 单元测试
 
-跑法：python test_draw_mat.py
+跑法（在 CMV1/ 目录下）：
+    python -m tools.draw_mat.test_draw_mat
+
 覆盖：
   - 四种图种的拆表逻辑（SplitTests）
   - draw_mat 的数据缓存 / dry_run 流程（CacheTests）
@@ -11,15 +13,15 @@ ChemMate V1 — draw_mat / tables 单元测试
 """
 from __future__ import annotations
 
-import sys
+import importlib
 import tempfile
 import unittest
-from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
+# 包的 __init__.py 把 draw_mat 这个名字导出成了函数，
+# 所以要拿“模块本身”（测试里要调 dm.draw_mat / dm.wrap_data_get），必须走 importlib。
+dm = importlib.import_module(".draw_mat", __package__)
 
-import draw_mat as dm  # noqa: E402
+from memory import process_cache  # noqa: E402
 from .tables import DrawError, split_for_plot  # noqa: E402
 
 
@@ -89,6 +91,12 @@ class SplitTests(unittest.TestCase):
         s8 = next(r for r in rows if r["stream"] == "S8")
         self.assertAlmostEqual(s8["value"], 0.9718)
 
+    def test_track_chinese_alias(self):
+        # 中文名走别名表：环己烷 → CYCLO-01
+        rows, _, extra = split_for_plot("component_track", sample_process(), component="环己烷")
+        self.assertEqual(extra["matched_component"], "CYCLO-01")
+        self.assertTrue(rows)
+
     def test_balance(self):
         # balance_check：B7 进 S6 / 出 S7, S8，side 应为 in/out 混合
         rows, _, _ = split_for_plot("balance_check", sample_process(), block="B7")
@@ -105,11 +113,12 @@ class CacheTests(unittest.TestCase):
     """draw_mat 数据缓存与 dry_run 流程。"""
 
     def setUp(self):
-        dm._LAST_PROCESS_DATA = None
+        # 缓存真身在 memory.process_cache._cached，不在 draw_mat 模块里
+        process_cache._cached = None
 
     def test_missing_without_cache(self):
         # 没数据也没缓存 → 明确报 missing_process_data
-        r = draw_mat(plot_type="stream_tp", dry_run=True)
+        r = dm.draw_mat(plot_type="stream_tp", dry_run=True)
         self.assertFalse(r["success"])
         self.assertEqual(r["error"], "missing_process_data")
 

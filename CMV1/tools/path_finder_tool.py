@@ -1,5 +1,5 @@
 import os
-
+from langchain.tools import tool
 
 def _compact_filename(value: str) -> str:
     """处理用户在中文文件名中随手加入的空格。"""
@@ -8,7 +8,16 @@ def _compact_filename(value: str) -> str:
 
 
 
-def path_finder(filename: str):
+
+
+@tool("path_finder", parse_docstring=True)
+def path_finder(filename: str) -> dict:
+    """在用户主目录中搜索指定文件名的 Aspen 文件,返回完整路径。
+
+    Args:
+        filename: 要查找的文件名,不区分大小写。
+    """
+    ...
 
 
     # ========================================================

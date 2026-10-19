@@ -19,40 +19,7 @@ from typing import Any, Callable
 from .jobs import create_job_dir, read_result, write_job
 from memory.process_cache import remember_process_data, get_cached_process_data
 from .matlab_backend import MatlabFailed, run_draw_dispatch
-from .tables import DrawError, PLOT_TYPES, split_for_plot
-
-TOOL_NAME = "draw_mat"
-
-TOOL_DESCRIPTION = (
-    "根据最近一次 data_get_process 的结果画一张图。"
-    "不要传入 process_data。"
-    "plot_type 只能是 stream_tp / stream_composition / component_track / balance_check。"
-    "禁止 sankey 或其它类型。"
-    "stream_composition 必须带 stream；component_track 必须带 component（Aspen ID，如 CYCLO-01）；"
-    "balance_check 必须带 block。"
-)
-
-TOOL_PARAMETERS = {
-    "type": "object",
-    "properties": {
-        "plot_type": {
-            "type": "string",
-            "enum": list(PLOT_TYPES),
-            "description": "stream_tp | stream_composition | component_track | balance_check",
-        },
-        "streams": {"type": "array", "items": {"type": "string"}},
-        "stream": {"type": "string"},
-        "component": {"type": "string"},
-        "block": {"type": "string"},
-        "value_field": {
-            "type": "string",
-            "enum": ["mole_fraction", "mole_flow", "mass_flow"],
-        },
-        "title": {"type": "string"},
-        "export": {"type": "string", "enum": ["png", "svg"]},
-    },
-    "required": ["plot_type"],
-}
+from .tables import DrawError, split_for_plot
 
 
 
@@ -99,30 +66,28 @@ def _caption(plot_type: str, title: str, extra: dict) -> str:
 def _default_draw_path() -> Path:
     """定位 MATLAB draw 目录（含 draw_dispatch.m）。
 
-    优先级：环境变量 CHEMMATE_MATLAB_DRAW > 相对仓库根目录的 matlab/draw。
+    优先级：环境变量 CHEMMATE_MATLAB_DRAW > 本模块同级的 matlab/。
     """
     env = os.environ.get("CHEMMATE_MATLAB_DRAW")
-    if env:
+    if env and str(env).strip():
         return Path(env)
-    here = Path(__file__).resolve()
-    # ds: 重组后 draw_mat.py 位于 CMV1/，matlab/draw 就在同级的
-    # ds: CMV1/matlab/draw，即 parents[0]；旧版只试 parents[1]/[2] 导致找不到
-    for cand in (
-        here.parents[0] / "draw_mat" / "matlab",
-        here.parents[1] / "draw_mat" / "matlab",
-        here.parents[2] / "tools" / "draw_mat",
-    ):
-        if (cand / "draw_dispatch.m").is_file():
-            return cand
-    return here.parents[0] / "matlab" / "draw"
+    # 本文件在 CMV1/tools/draw_mat/ 下，.m 文件在它的 matlab/ 子目录
+    return Path(__file__).resolve().parent / "matlab"
 
 
 def _default_jobs_root() -> Path:
-    """job 目录根：环境变量 CHEMMATE_JOBS_DIR，默认当前目录下 jobs/。"""
+    """job 目录根：环境变量 CHEMMATE_JOBS_DIR，默认项目内 CMV1/jobs。
+
+    ★ 不能用 Path.cwd()：UI 从 CMV1/ui 启动时 cwd 就是 CMV1/ui，
+      job（含 figure.png）会落到 CMV1/ui/jobs，而前端只放行
+      CMV1/jobs、CMV1/reports、CMV1/ui/runs —— 图就会显示不出来。
+      改为相对本文件定位，保证与启动方式无关。
+    """
     env = os.environ.get("CHEMMATE_JOBS_DIR")
-    if env:
+    if env and str(env).strip():
         return Path(env)
-    return Path.cwd() / "jobs"
+    # 本文件在 CMV1/tools/draw_mat/ 下：parents[2] == CMV1
+    return Path(__file__).resolve().parents[2] / "jobs"
 
 
 def _resolve_process_data(process_data: dict | None) -> dict:
@@ -258,9 +223,4 @@ def draw_mat(
     }
 
 
-def tool_spec() -> dict:
-    return {
-        "name": TOOL_NAME,
-        "description": TOOL_DESCRIPTION,
-        "parameters": TOOL_PARAMETERS,
-    }
+

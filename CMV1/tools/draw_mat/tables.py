@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..component_dicts import COMPONENT_ALIASES
+
 
 PLOT_TYPES = (
     "stream_tp",
@@ -65,14 +67,33 @@ def _streams(process_data: dict) -> dict:
 
 
 def _lookup_component(mapping: Any, component: str) -> tuple[str | None, Any]:
-    """在组分映射里按名字找组分（大小写不敏感），返回 (实际键名, 数据)。"""
+    """在组分映射里找组分：精确 → 别名 → 子串，返回 (实际键名, 数据)。"""
     if not isinstance(mapping, dict):
         return None, None
-    target = str(component).lower()
+
+    target = str(component).strip().lower()
+    if not target:
+        return None, None
+
+    # 1. 精确
     for name in mapping:
         if str(name).lower() == target:
             return str(name), mapping[name]
+
+    # 2. 别名（中文名 → Aspen ID / 英文名）
+    for alias in COMPONENT_ALIASES.get(target, []):
+        for name in mapping:
+            if str(name).lower() == alias.lower():
+                return str(name), mapping[name]
+
+    # 3. 子串兜底（可能误命中，放最后）
+    for name in mapping:
+        name_lower = str(name).lower()
+        if target in name_lower or name_lower in target:
+            return str(name), mapping[name]
+
     return None, None
+
 
 
 def _stream_total_mole_flow(stream: dict) -> float | None:
